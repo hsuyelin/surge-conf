@@ -61,6 +61,12 @@ sync_modules() {
     ./build/target/release/sync_modules
 }
 
+# Run sync_geoip
+sync_geoip() {
+    log_status "Running" "sync_geoip..."
+    ./build/target/release/sync_geoip
+}
+
 # Main function
 main() {
     echo ""
@@ -72,6 +78,7 @@ main() {
     sync_icons
     sync_rules
     sync_modules
+    sync_geoip
 
     echo ""
     log_success "Done!" "All resources synced successfully"

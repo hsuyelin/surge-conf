@@ -17,6 +17,10 @@ path = "src/bin/sync_rules.rs"
 name = "sync_modules"
 path = "src/bin/sync_modules.rs"
 
+[[bin]]
+name = "sync_geoip"
+path = "src/bin/sync_geoip.rs"
+
 [dependencies]
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 serde = { version = "1.0.228", features = ["derive"] }
