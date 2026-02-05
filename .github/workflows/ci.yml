@@ -1,0 +1,48 @@
+name: Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'build/**'
+  pull_request:
+    paths:
+      - 'build/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: CI Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: build
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run Clippy linter
+        run: cargo clippy -- -D warnings
+
+      - name: Check if code compiles
+        run: cargo check
+
+      - name: Build project
+        run: cargo build --release

@@ -1,0 +1,50 @@
+name: Sync Surge Resources
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: build
+
+      - name: Sync Icons
+        working-directory: build
+        run: cargo run --release --bin sync_icons
+
+      - name: Sync Rules
+        working-directory: build
+        run: cargo run --release --bin sync_rules
+
+      - name: Sync Modules
+        working-directory: build
+        run: cargo run --release --bin sync_modules
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync upstream resources [skip ci]"
+            git push
+          fi

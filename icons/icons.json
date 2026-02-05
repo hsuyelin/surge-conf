@@ -1,0 +1,95 @@
+{
+  "name": "Surge Icons",
+  "description": "Icons collected from the internet, copyright belongs to original authors",
+  "updatedAt": "2026-02-05 11:44:23",
+  "icons": [
+    {
+      "name": "chatgpt",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/chatgpt.png"
+    },
+    {
+      "name": "youtube",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/youtube.png"
+    },
+    {
+      "name": "spotify",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/spotify.png"
+    },
+    {
+      "name": "telegram",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/telegram.png"
+    },
+    {
+      "name": "bilibiliTv",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/bilibiliTv.png"
+    },
+    {
+      "name": "discord",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/discord.png"
+    },
+    {
+      "name": "game",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/game.png"
+    },
+    {
+      "name": "google",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/google.png"
+    },
+    {
+      "name": "apple",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/apple.png"
+    },
+    {
+      "name": "hk",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/hk.png"
+    },
+    {
+      "name": "tw",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/tw.png"
+    },
+    {
+      "name": "jp",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/jp.png"
+    },
+    {
+      "name": "kr",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/kr.png"
+    },
+    {
+      "name": "sg",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/sg.png"
+    },
+    {
+      "name": "us",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/us.png"
+    },
+    {
+      "name": "uk",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/uk.png"
+    },
+    {
+      "name": "in",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/country/in.png"
+    },
+    {
+      "name": "surge",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/policy/surge.png"
+    },
+    {
+      "name": "final",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/policy/final.png"
+    },
+    {
+      "name": "vpn",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/policy/vpn.png"
+    },
+    {
+      "name": "gMedia",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/policy/gMedia.png"
+    },
+    {
+      "name": "emby",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/policy/emby.png"
+    }
+  ]
+}

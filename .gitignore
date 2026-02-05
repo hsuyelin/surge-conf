@@ -1,0 +1,18 @@
+# Private configuration
+my.conf
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+
+# Rust build artifacts
+target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
