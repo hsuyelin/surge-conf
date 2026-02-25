@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
-use surge_sync::{download_url, ensure_dir, gh_annotate, log_status, log_sub, LogLevel, Timer};
+use surge_sync::{
+    download_url, ensure_dir, gh_annotate, has_binary_changed, log_status, log_sub, LogLevel, Timer,
+};
 
 /// GeoIP database source configuration
 const GEOIP_SOURCE: &str = "https://github.com/Hackl0us/GeoIP2-CN/raw/release/Country.mmdb";
@@ -29,16 +31,23 @@ fn get_project_root() -> PathBuf {
 }
 
 /// Download the GeoIP database and save it locally
-fn download_geoip(geoip_dir: &Path) -> Result<()> {
+/// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
+fn download_geoip(geoip_dir: &Path) -> Result<bool> {
     log_sub(&format!("Downloading {}", GEOIP_FILENAME));
 
     let data = download_url(GEOIP_SOURCE)?;
     let file_path = geoip_dir.join(GEOIP_FILENAME);
-    fs::write(&file_path, &data)?;
 
+    // Check if content has actually changed
+    if !has_binary_changed(&data, &file_path) {
+        log_sub(&format!("{} unchanged, skipped", GEOIP_FILENAME));
+        return Ok(false);
+    }
+
+    fs::write(&file_path, &data)?;
     log_sub(&format!("Saved {} ({} bytes)", GEOIP_FILENAME, data.len()));
 
-    Ok(())
+    Ok(true)
 }
 
 fn main() -> Result<()> {
@@ -50,8 +59,13 @@ fn main() -> Result<()> {
     ensure_dir(&geoip_dir)?;
 
     match download_geoip(&geoip_dir) {
-        Ok(_) => {
+        Ok(changed) => {
             timer.stop(1);
+            if changed {
+                log_status("Updated", "GeoIP database", LogLevel::Success);
+            } else {
+                log_status("Skipped", "GeoIP database (unchanged)", LogLevel::Info);
+            }
         }
         Err(e) => {
             gh_annotate(

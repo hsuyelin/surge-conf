@@ -11,7 +11,8 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use surge_sync::{
-    current_timestamp, download_url, ensure_dir, gh_annotate, log_status, log_sub, LogLevel, Timer,
+    current_timestamp, download_url, ensure_dir, gh_annotate, has_binary_changed, log_status,
+    log_sub, LogLevel, Timer,
 };
 
 /// Icon entry in the JSON index
@@ -97,12 +98,8 @@ fn get_project_root() -> PathBuf {
 }
 
 /// Download a single icon and save it to the appropriate directory
-fn download_icon(
-    name: &str,
-    url: &str,
-    category: IconCategory,
-    icons_dir: &Path,
-) -> Result<PathBuf> {
+/// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
+fn download_icon(name: &str, url: &str, category: IconCategory, icons_dir: &Path) -> Result<bool> {
     let category_dir = icons_dir.join(category.as_str());
     ensure_dir(&category_dir)?;
 
@@ -114,13 +111,19 @@ fn download_icon(
 
     // Download the icon
     let data = download_url(url)?;
-    fs::write(&file_path, data)?;
 
-    Ok(file_path)
+    // Check if content has actually changed
+    if !has_binary_changed(&data, &file_path) {
+        return Ok(false);
+    }
+
+    fs::write(&file_path, data)?;
+    Ok(true)
 }
 
 /// Generate the icons.json index file
-fn generate_index(icons: &[(String, String, IconCategory)], icons_dir: &Path) -> Result<()> {
+/// Returns true if the file was updated, false if unchanged
+fn generate_index(icons: &[(String, String, IconCategory)], icons_dir: &Path) -> Result<bool> {
     let github_base = "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons";
 
     let entries: Vec<IconEntry> = icons
@@ -150,9 +153,25 @@ fn generate_index(icons: &[(String, String, IconCategory)], icons_dir: &Path) ->
     };
 
     let json = serde_json::to_string_pretty(&index)?;
-    fs::write(icons_dir.join("icons.json"), json)?;
+    let json_path = icons_dir.join("icons.json");
 
-    Ok(())
+    // Compare ignoring the updatedAt field (which contains timestamp)
+    if json_path.exists() {
+        let existing = fs::read_to_string(&json_path)?;
+        // Filter out the updatedAt line for comparison
+        let filter_updated_at = |s: &str| -> Vec<String> {
+            s.lines()
+                .filter(|line| !line.trim().starts_with("\"updatedAt\""))
+                .map(|l| l.to_string())
+                .collect()
+        };
+        if filter_updated_at(&json) == filter_updated_at(&existing) {
+            return Ok(false);
+        }
+    }
+
+    fs::write(&json_path, json)?;
+    Ok(true)
 }
 
 fn main() -> Result<()> {
@@ -165,15 +184,22 @@ fn main() -> Result<()> {
 
     let sources = get_icon_sources();
     let mut success_count = 0;
+    let mut updated_count = 0;
     let mut downloaded_icons: Vec<(String, String, IconCategory)> = Vec::new();
 
     for (name, url, category) in &sources {
         log_sub(&format!("Downloading {}.png", name));
 
         match download_icon(name, url, *category, &icons_dir) {
-            Ok(_) => {
+            Ok(changed) => {
                 success_count += 1;
                 downloaded_icons.push((name.to_string(), url.to_string(), *category));
+                if changed {
+                    updated_count += 1;
+                    log_sub(&format!("{} updated", name));
+                } else {
+                    log_sub(&format!("{} unchanged, skipped", name));
+                }
             }
             Err(e) => {
                 gh_annotate("warning", &format!("Failed to download {}: {}", name, e));
@@ -184,9 +210,23 @@ fn main() -> Result<()> {
 
     // Generate index file
     log_sub("Generating icons.json");
-    generate_index(&downloaded_icons, &icons_dir)?;
+    match generate_index(&downloaded_icons, &icons_dir)? {
+        true => log_sub("icons.json updated"),
+        false => log_sub("icons.json unchanged, skipped"),
+    }
 
     timer.stop(success_count);
+
+    log_status(
+        "Summary",
+        &format!(
+            "{} updated, {} unchanged, {} failed",
+            updated_count,
+            success_count - updated_count,
+            sources.len() - success_count
+        ),
+        LogLevel::Info,
+    );
 
     if success_count < sources.len() {
         log_status(

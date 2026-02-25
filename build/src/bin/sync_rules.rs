@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use surge_sync::{
-    current_timestamp, download_text, ensure_dir, gh_annotate, log_status, log_sub, LogLevel, Timer,
+    current_timestamp, download_text, ensure_dir, gh_annotate, has_text_changed, log_status,
+    log_sub, LogLevel, Timer,
 };
 
 /// Rule category for directory organization
@@ -216,7 +217,8 @@ fn get_project_root() -> PathBuf {
 }
 
 /// Download and process a single rule file
-fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<()> {
+/// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
+fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<bool> {
     let category_dir = rules_dir.join(source.category.as_str());
     ensure_dir(&category_dir)?;
 
@@ -236,9 +238,17 @@ fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<()> {
 
     // Write file with new header + original rules
     let final_content = format!("{}\n{}", header, rule_content);
-    fs::write(&file_path, final_content)?;
 
-    Ok(())
+    // Check if content has actually changed (ignoring timestamp)
+    if file_path.exists() {
+        let existing_content = fs::read_to_string(&file_path)?;
+        if !has_text_changed(&final_content, &existing_content) {
+            return Ok(false);
+        }
+    }
+
+    fs::write(&file_path, final_content)?;
+    Ok(true)
 }
 
 fn main() -> Result<()> {
@@ -251,14 +261,21 @@ fn main() -> Result<()> {
 
     let sources = get_rule_sources();
     let mut success_count = 0;
+    let mut updated_count = 0;
     let total = sources.len();
 
     for source in &sources {
         log_sub(&format!("Downloading {}", source.name));
 
         match sync_rule(source, &rules_dir) {
-            Ok(_) => {
+            Ok(changed) => {
                 success_count += 1;
+                if changed {
+                    updated_count += 1;
+                    log_sub(&format!("{} updated", source.name));
+                } else {
+                    log_sub(&format!("{} unchanged, skipped", source.name));
+                }
             }
             Err(e) => {
                 gh_annotate("warning", &format!("Failed to sync {}: {}", source.name, e));
@@ -268,6 +285,17 @@ fn main() -> Result<()> {
     }
 
     timer.stop(success_count);
+
+    log_status(
+        "Summary",
+        &format!(
+            "{} updated, {} unchanged, {} failed",
+            updated_count,
+            success_count - updated_count,
+            total - success_count
+        ),
+        LogLevel::Info,
+    );
 
     if success_count < total {
         log_status(

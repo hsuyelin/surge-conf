@@ -156,6 +156,27 @@ pub fn ensure_dir(path: &std::path::Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Compare two text contents ignoring "# Last Updated:" lines.
+/// Returns true if meaningful content has changed.
+pub fn has_text_changed(new_content: &str, existing_content: &str) -> bool {
+    let filter = |line: &&str| {
+        let trimmed = line.trim();
+        !trimmed.starts_with("# Last Updated:")
+    };
+    let new_lines: Vec<&str> = new_content.lines().filter(filter).collect();
+    let old_lines: Vec<&str> = existing_content.lines().filter(filter).collect();
+    new_lines != old_lines
+}
+
+/// Compare new binary data against an existing file on disk.
+/// Returns true if the content is different or the file doesn't exist.
+pub fn has_binary_changed(new_data: &[u8], file_path: &std::path::Path) -> bool {
+    match std::fs::read(file_path) {
+        Ok(existing) => existing != new_data,
+        Err(_) => true, // File doesn't exist, treat as changed
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,5 +187,25 @@ mod tests {
         assert_eq!(to_camel_case("you-tube"), "youTube");
         assert_eq!(to_camel_case("DISCORD"), "discord");
         assert_eq!(to_camel_case("Apple 1"), "apple1");
+    }
+
+    #[test]
+    fn test_has_text_changed_identical_content() {
+        let old = "#########################################\n# test\n# Last Updated: 2026-02-24 02:09:28\n# Entries: 10\n#########################################\nRULE1\nRULE2\n";
+        let new = "#########################################\n# test\n# Last Updated: 2026-02-25 14:00:00\n# Entries: 10\n#########################################\nRULE1\nRULE2\n";
+        assert!(!has_text_changed(new, old));
+    }
+
+    #[test]
+    fn test_has_text_changed_different_content() {
+        let old = "#########################################\n# test\n# Last Updated: 2026-02-24 02:09:28\n# Entries: 10\n#########################################\nRULE1\nRULE2\n";
+        let new = "#########################################\n# test\n# Last Updated: 2026-02-25 14:00:00\n# Entries: 11\n#########################################\nRULE1\nRULE2\nRULE3\n";
+        assert!(has_text_changed(new, old));
+    }
+
+    #[test]
+    fn test_has_text_changed_new_file() {
+        let new = "# test\n# Last Updated: 2026-02-25\nRULE1\n";
+        assert!(has_text_changed(new, ""));
     }
 }
