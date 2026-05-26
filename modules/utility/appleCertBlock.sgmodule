@@ -1,0 +1,46 @@
+#########################################
+# appleCertBlock
+# Last Updated: 2026-05-26 00:00:00
+# Upstream: https://github.com/salem-2007/apple-cert-block
+# GitHub: https://github.com/hsuyelin/surge-conf
+#########################################
+
+#!name=Apple Certificate Block
+#!desc=Block Apple/CA certificate validation endpoints to allow expired certificates to remain usable
+#!author=Salem
+#!homepage=https://github.com/salem-2007/apple-cert-block
+#!icon=https://cdn.jsdelivr.net/gh/salem-2007/apple-cert-block@main/icon.png
+#!system=ios
+
+[Rule]
+# Apple OCSP
+DOMAIN,ocsp.apple.com,REJECT
+DOMAIN,ocsp2.apple.com,REJECT
+
+# Apple Validation
+DOMAIN,valid.apple.com,REJECT
+DOMAIN,ppq.apple.com,REJECT
+DOMAIN,ppq-ext.v.aaplimg.com,REJECT
+
+# Apple CRL
+DOMAIN,crl.apple.com,REJECT
+DOMAIN,certs.apple.com,REJECT
+
+# DigiCert
+DOMAIN,ocsp.digicert.com,REJECT
+DOMAIN,ocsp.digicert.cn,REJECT
+DOMAIN,crl3.digicert.com,REJECT
+DOMAIN,crl4.digicert.com,REJECT
+
+# Entrust
+DOMAIN,ocsp.entrust.net,REJECT
+DOMAIN,crl.entrust.net,REJECT
+
+# Sectigo / USERTrust
+DOMAIN,ocsp.sectigo.com,REJECT
+DOMAIN,crl.sectigo.com,REJECT
+DOMAIN,ocsp.usertrust.com,REJECT
+DOMAIN,crl.usertrust.com,REJECT
+
+[MITM]
+hostname = %APPEND% ocsp.apple.com, ocsp2.apple.com, valid.apple.com
