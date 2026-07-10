@@ -1,11 +1,19 @@
 {
   "name": "Surge Icons",
   "description": "Icons collected from the internet, copyright belongs to original authors",
-  "updatedAt": "2026-07-09 03:18:15",
+  "updatedAt": "2026-07-10 03:20:31",
   "icons": [
     {
       "name": "chatgpt",
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/chatgpt.png"
+    },
+    {
+      "name": "youtube",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/youtube.png"
+    },
+    {
+      "name": "spotify",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/spotify.png"
     },
     {
       "name": "telegram",
@@ -22,6 +30,10 @@
     {
       "name": "game",
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/game.png"
+    },
+    {
+      "name": "google",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/google.png"
     },
     {
       "name": "apple",
