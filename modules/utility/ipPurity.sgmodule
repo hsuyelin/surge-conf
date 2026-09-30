@@ -1,19 +1,21 @@
 #########################################
 # ipPurity
-# Last Updated: 2026-02-25 02:11:16
+# Last Updated: 2026-09-30 04:16:51
 # Upstream: https://raw.githubusercontent.com/Likhixang/Egerny/refs/heads/main/sgmodule/IPPure.sgmodule
 # GitHub: https://github.com/hsuyelin/surge-conf
 #########################################
 
-#!name=IP-Pure
-#!desc=节点 IP 纯净度检测（IPPure）,请先在参数内选择策略组。
+#!name=IP 纯净度检测
+#!desc=多源节点 IP 纯净度检测（IPPure + IPLogs + ip-api），请先在参数内选择策略组。
 #!category=网络检测
 #!arguments=Proxy:DIRECT,MarkIP:false
-#!arguments-desc=Proxy: 选择策略组,默认DIRECT. @from wish | MarkIP: IP 打码(true/false),默认 false
+#!arguments-desc=Proxy: 选择策略组,默认DIRECT | MarkIP: IP 打码(true/false),默认 false
 
 [Rule]
 # 确保检测请求走选定的代理策略
 DOMAIN-SUFFIX,ippure.com,{{{Proxy}}}
+DOMAIN-SUFFIX,iplogs.com,{{{Proxy}}}
+DOMAIN-SUFFIX,ip-api.com,{{{Proxy}}}
 
 [Panel]
 IP-Pure = script-name=IP-Pure, title=IP 纯净度, content=刷新中…, style=info, update-interval=300
