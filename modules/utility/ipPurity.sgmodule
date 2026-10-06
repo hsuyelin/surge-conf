@@ -1,6 +1,6 @@
 #########################################
 # ipPurity
-# Last Updated: 2026-09-30 04:16:51
+# Last Updated: 2026-10-06 05:10:21
 # Upstream: https://raw.githubusercontent.com/Likhixang/Egerny/refs/heads/main/sgmodule/IPPure.sgmodule
 # GitHub: https://github.com/hsuyelin/surge-conf
 #########################################
@@ -16,6 +16,7 @@
 DOMAIN-SUFFIX,ippure.com,{{{Proxy}}}
 DOMAIN-SUFFIX,iplogs.com,{{{Proxy}}}
 DOMAIN-SUFFIX,ip-api.com,{{{Proxy}}}
+DOMAIN-SUFFIX,cleanip.io,{{{Proxy}}}
 
 [Panel]
 IP-Pure = script-name=IP-Pure, title=IP 纯净度, content=刷新中…, style=info, update-interval=300
