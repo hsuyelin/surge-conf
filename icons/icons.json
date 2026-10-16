@@ -8,6 +8,14 @@
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/chatgpt.png"
     },
     {
+      "name": "claude_01",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/claude_01.png"
+    },
+    {
+      "name": "claude_02",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/claude_02.png"
+    },
+    {
       "name": "youtube",
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/youtube.png"
     },

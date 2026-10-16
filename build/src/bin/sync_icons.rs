@@ -4,7 +4,7 @@
 //! an icons.json index file.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use surge_sync::{
     current_timestamp, download_url, ensure_dir, gh_annotate, has_binary_changed, log_status,
-    log_sub, LogLevel, Timer,
+    log_sub, project_root, LogLevel, Timer,
 };
 
 /// Icon entry in the JSON index
@@ -81,20 +81,6 @@ fn get_icon_sources() -> Vec<(&'static str, &'static str, IconCategory)> {
         ("gMedia", "https://raw.githubusercontent.com/erdongchanyo/icon/main/Policy-Filter/GMedia.png", IconCategory::Policy),
         ("emby", "https://raw.githubusercontent.com/erdongchanyo/icon/main/Policy-Filter/Emby.png", IconCategory::Policy),
     ]
-}
-
-/// Get the project root directory
-fn get_project_root() -> PathBuf {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::current_dir().unwrap());
-
-    // If running from build directory, go up one level
-    if manifest_dir.ends_with("build") {
-        manifest_dir.parent().unwrap().to_path_buf()
-    } else {
-        manifest_dir
-    }
 }
 
 /// Download a single icon and save it to the appropriate directory
@@ -178,7 +164,7 @@ fn main() -> Result<()> {
     log_status("Syncing", "icons from upstream...", LogLevel::Info);
     let timer = Timer::start("syncing");
 
-    let root = get_project_root();
+    let root = project_root()?;
     let icons_dir = root.join("icons");
     ensure_dir(&icons_dir)?;
 
@@ -186,6 +172,14 @@ fn main() -> Result<()> {
     let mut success_count = 0;
     let mut updated_count = 0;
     let mut downloaded_icons: Vec<(String, String, IconCategory)> = Vec::new();
+
+    for name in ["claude_01", "claude_02"] {
+        let path = icons_dir.join("apps").join(format!("{name}.png"));
+        if !path.is_file() {
+            anyhow::bail!("missing local icon: {}", path.display());
+        }
+        downloaded_icons.push((name.to_string(), String::new(), IconCategory::Apps));
+    }
 
     for (name, url, category) in &sources {
         log_sub(&format!("Downloading {}.png", name));

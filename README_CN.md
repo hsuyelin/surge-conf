@@ -66,3 +66,20 @@ cd surge-conf
 - 将 `<YOUR_SUBSCRIPTION_URL>` 替换为你的代理订阅链接
 - 在 `[Proxy]` 区块添加你的代理
 - 在 `[MITM]` 区块添加证书
+
+规则同步会按 `surge.conf` 中 `[Rule]` 的顺序去重本地规则集；`DOMAIN-KEYWORD`、`DOMAIN-SUFFIX`、`DOMAIN` 及 IP 网段的包含关系也会处理。较早的具体规则与较晚的宽泛规则会同时保留，以免改变其他域名的匹配结果。AI 自定义规则只放在 `rules/ai/ai.conf` 的 `BEGIN/END LOCAL AI RULES` 区间，刷新上游时会保留该区间；不再使用 `private-ai.conf`。仅执行本地去重（不下载）：`cd build && cargo run --bin sync_rules -- --normalize-only`。
+
+地区和直连定制规则保存在 `rules/private/` 并通过 `surge.conf` 的 `RULE-SET` 引用；已存在的 Emby、AI、Streaming、DIRECT 策略优先，因此未用 `co.uk` 等宽泛规则覆盖现有服务。`wonderegg.de` 保持 Emby，未创建空 TW 规则集。GitHub Actions 的 `sync_rules` 在下载上游规则后执行同一套去重，再提交最终规则文件。
+
+`modules/utility/appleCertBlock.sgmodule` 会拦截证书状态检查端点，并通过 `[MITM] hostname = %APPEND%` 添加主机名；启用后会削弱证书吊销状态检查，仅在了解风险时使用。
+
+## 查询分流规则
+
+```bash
+cd build
+cargo run --bin check_rule -- chatgpt.com       # 域名；也支持 IPv4 / IPv6
+cargo run --bin check_rule -- --keyword cursor  # 搜索规则中包含该关键词的域名
+cargo run --bin check_rule                     # 逐行交互输入域名或 IP
+```
+
+按 `surge.conf` 加载顺序列出所有命中的本地规则、所在 conf、行号及策略。支持 DOMAIN、DOMAIN-SUFFIX、DOMAIN-KEYWORD、DOMAIN-SET（纯域名列表）与 IP-CIDR/IP-CIDR6。关键词模式搜索规则内容，不等于实际流量匹配。只查询本地文件；内置 SYSTEM/LAN、外部 URL、GeoIP/ASN 数据库及域名的 DNS→IP 匹配会注明无法离线判断，因此“首个本地命中”不一定是 Surge 最终策略。

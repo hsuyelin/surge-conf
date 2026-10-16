@@ -4,31 +4,18 @@
 //! and saves it locally.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 
 use surge_sync::{
-    download_url, ensure_dir, gh_annotate, has_binary_changed, log_status, log_sub, LogLevel, Timer,
+    download_url, ensure_dir, gh_annotate, has_binary_changed, log_status, log_sub, project_root,
+    LogLevel, Timer,
 };
 
 /// GeoIP database source configuration
 const GEOIP_SOURCE: &str = "https://github.com/Hackl0us/GeoIP2-CN/raw/release/Country.mmdb";
 const GEOIP_FILENAME: &str = "Country.mmdb";
-
-/// Get the project root directory
-fn get_project_root() -> PathBuf {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::current_dir().unwrap());
-
-    // If running from build directory, go up one level
-    if manifest_dir.ends_with("build") {
-        manifest_dir.parent().unwrap().to_path_buf()
-    } else {
-        manifest_dir
-    }
-}
 
 /// Download the GeoIP database and save it locally
 /// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
@@ -54,7 +41,7 @@ fn main() -> Result<()> {
     log_status("Syncing", "GeoIP database from upstream...", LogLevel::Info);
     let timer = Timer::start("syncing");
 
-    let root = get_project_root();
+    let root = project_root()?;
     let geoip_dir = root.join("geoip");
     ensure_dir(&geoip_dir)?;
 

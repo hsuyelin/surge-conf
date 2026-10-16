@@ -3,13 +3,13 @@
 //! This tool downloads Surge modules from upstream repositories.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 
 use surge_sync::{
     current_timestamp, download_text, ensure_dir, gh_annotate, has_text_changed, log_status,
-    log_sub, LogLevel, Timer,
+    log_sub, project_root, LogLevel, Timer,
 };
 
 /// Module category for directory organization
@@ -128,20 +128,6 @@ fn generate_header(name: &str, upstream_url: &str) -> String {
     )
 }
 
-/// Get the project root directory
-fn get_project_root() -> PathBuf {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::current_dir().unwrap());
-
-    // If running from build directory, go up one level
-    if manifest_dir.ends_with("build") {
-        manifest_dir.parent().unwrap().to_path_buf()
-    } else {
-        manifest_dir
-    }
-}
-
 /// Download and process a single module file
 /// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
 fn sync_module(source: &ModuleSource, modules_dir: &Path) -> Result<bool> {
@@ -176,7 +162,7 @@ fn main() -> Result<()> {
     log_status("Syncing", "modules from upstream...", LogLevel::Info);
     let timer = Timer::start("syncing");
 
-    let root = get_project_root();
+    let root = project_root()?;
     let modules_dir = root.join("modules");
     ensure_dir(&modules_dir)?;
 

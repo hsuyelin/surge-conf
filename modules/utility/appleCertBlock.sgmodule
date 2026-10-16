@@ -1,12 +1,5 @@
-#########################################
-# appleCertBlock
-# Last Updated: 2026-05-26 00:00:00
-# Upstream: https://github.com/salem-2007/apple-cert-block
-# GitHub: https://github.com/hsuyelin/surge-conf
-#########################################
-
 #!name=Apple Certificate Block
-#!desc=Block Apple/CA certificate validation endpoints to allow expired certificates to remain usable
+#!desc=Block Apple/CA certificate status-check endpoints; this weakens certificate revocation checks
 #!author=Salem
 #!homepage=https://github.com/salem-2007/apple-cert-block
 #!icon=https://cdn.jsdelivr.net/gh/salem-2007/apple-cert-block@main/icon.png

@@ -66,3 +66,20 @@ Edit `surge.conf` and replace:
 - `<YOUR_SUBSCRIPTION_URL>` with your proxy subscription link
 - Add your proxies in `[Proxy]` section
 - Add MITM certificate in `[MITM]` section
+
+Rule sync deduplicates local rule sets in `surge.conf` `[Rule]` order, including `DOMAIN-KEYWORD` / `DOMAIN-SUFFIX` / `DOMAIN` and IP network containment. Earlier specific rules and later broad rules both remain when removing either would change routing. Keep custom AI entries only inside `BEGIN/END LOCAL AI RULES` in `rules/ai/ai.conf`; upstream refresh preserves that section. `private-ai.conf` is no longer used. To normalize local rules without downloading: `cd build && cargo run --bin sync_rules -- --normalize-only`.
+
+Regional and direct overrides live under `rules/private/` and are loaded with `RULE-SET` entries. Existing Emby, AI, Streaming, and DIRECT decisions take precedence; broad `co.uk` would shadow service rules and is omitted. `wonderegg.de` remains Emby, so no empty TW rule set is created. GitHub Actions runs `sync_rules` after checkout: it downloads upstream sets, normalizes the complete local set, then commits the resulting files.
+
+`modules/utility/appleCertBlock.sgmodule` blocks certificate status-check endpoints and appends hosts with `[MITM] hostname = %APPEND%`. Enabling it weakens certificate revocation checks; use only when the risk is understood.
+
+## Inspect local routing rules
+
+```bash
+cd build
+cargo run --bin check_rule -- chatgpt.com       # Hostname, IPv4 or IPv6
+cargo run --bin check_rule -- --keyword cursor  # Search domain rule operands
+cargo run --bin check_rule                     # Interactive input, one per line
+```
+
+The tool reports matching local rules in `surge.conf` order with their conf, line number and policy. Supported matchers: DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, DOMAIN-SET (plain domain lists), IP-CIDR and IP-CIDR6. Keyword search lists rules containing the term; it is not a traffic match. Built-in SYSTEM/LAN sets, external URLs, GeoIP/ASN and DNS-dependent IP rules for hostnames cannot be resolved offline. The first local match may therefore differ from Surge's effective route.

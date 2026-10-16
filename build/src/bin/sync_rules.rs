@@ -3,14 +3,17 @@
 //! This tool downloads rule sets from upstream repositories and organizes
 //! them into categorized directories with proper headers.
 
+use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 
 use surge_sync::{
     current_timestamp, download_text, ensure_dir, gh_annotate, has_text_changed, log_status,
-    log_sub, LogLevel, Timer,
+    log_sub, project_root,
+    rules::{ai_additions, normalize_rules},
+    LogLevel, Timer,
 };
 
 /// Rule category for directory organization
@@ -72,11 +75,6 @@ fn get_rule_sources() -> Vec<RuleSource> {
         RuleSource {
             name: "appleServices",
             url: "https://ruleset.skk.moe/List/non_ip/apple_services.conf",
-            category: RuleCategory::Apple,
-        },
-        RuleSource {
-            name: "appleCdn",
-            url: "https://ruleset.skk.moe/List/non_ip/apple_cdn.conf",
             category: RuleCategory::Apple,
         },
         RuleSource {
@@ -202,20 +200,6 @@ fn strip_header(content: &str) -> String {
     lines[start_idx..].join("\n")
 }
 
-/// Get the project root directory
-fn get_project_root() -> PathBuf {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::current_dir().unwrap());
-
-    // If running from build directory, go up one level
-    if manifest_dir.ends_with("build") {
-        manifest_dir.parent().unwrap().to_path_buf()
-    } else {
-        manifest_dir
-    }
-}
-
 /// Download and process a single rule file
 /// Returns Ok(true) if the file was updated, Ok(false) if skipped (unchanged)
 fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<bool> {
@@ -231,6 +215,14 @@ fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<bool> {
 
     // Strip original header and count entries
     let rule_content = strip_header(&content);
+    let rule_content = if source.name == "ai" {
+        let existing = fs::read_to_string(&file_path)?;
+        let local = ai_additions(&existing)
+            .ok_or_else(|| anyhow::anyhow!("ai.conf missing local AI rules markers"))?;
+        format!("# BEGIN LOCAL AI RULES\n{local}# END LOCAL AI RULES\n{rule_content}")
+    } else {
+        rule_content
+    };
     let entry_count = count_entries(&rule_content);
 
     // Generate new header
@@ -255,7 +247,7 @@ fn main() -> Result<()> {
     log_status("Syncing", "rules from upstream...", LogLevel::Info);
     let timer = Timer::start("syncing");
 
-    let root = get_project_root();
+    let root = project_root()?;
     let rules_dir = root.join("rules");
     ensure_dir(&rules_dir)?;
 
@@ -263,6 +255,24 @@ fn main() -> Result<()> {
     let mut success_count = 0;
     let mut updated_count = 0;
     let total = sources.len();
+
+    if std::env::args().any(|arg| arg == "--normalize-only") {
+        let normalized = normalize_rules(&root)?;
+        log_sub(&format!("Normalized {normalized} rule sets"));
+        return Ok(());
+    }
+
+    // Upstream files are downloaded before normalization; retain an already-normalized
+    // file's header when the resulting rules are unchanged.
+    let mut previous = HashMap::new();
+    for source in &sources {
+        let path = rules_dir
+            .join(source.category.as_str())
+            .join(format!("{}.conf", source.name));
+        if let Ok(content) = fs::read_to_string(&path) {
+            previous.insert(path, content);
+        }
+    }
 
     for source in &sources {
         log_sub(&format!("Downloading {}", source.name));
@@ -281,6 +291,15 @@ fn main() -> Result<()> {
                 gh_annotate("warning", &format!("Failed to sync {}: {}", source.name, e));
                 // Continue with other rules - skip failed ones
             }
+        }
+    }
+
+    let normalized = normalize_rules(&root)?;
+    log_sub(&format!("Normalized {normalized} rule sets"));
+    for (path, original) in previous {
+        let current = fs::read_to_string(&path)?;
+        if !has_text_changed(&current, &original) {
+            fs::write(path, original)?;
         }
     }
 

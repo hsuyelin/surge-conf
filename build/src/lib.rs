@@ -2,6 +2,9 @@
 //!
 //! Provides logging utilities with Cargo-style output and color support for GitHub Actions.
 
+pub mod lookup;
+pub mod rules;
+
 use std::time::Instant;
 
 /// ANSI color codes for terminal output
@@ -146,6 +149,27 @@ pub fn to_camel_case(name: &str) -> String {
 /// Get the current timestamp in ISO format
 pub fn current_timestamp() -> String {
     chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+/// Locate the repository root from the Cargo project or the current directory.
+///
+/// # Errors
+/// Returns an error if the working directory is unavailable or the build directory has no parent.
+pub fn project_root() -> anyhow::Result<std::path::PathBuf> {
+    use anyhow::Context;
+
+    let directory = match std::env::var_os("CARGO_MANIFEST_DIR") {
+        Some(path) => std::path::PathBuf::from(path),
+        None => std::env::current_dir().context("cannot determine the current directory")?,
+    };
+    if directory.ends_with("build") {
+        Ok(directory
+            .parent()
+            .context("build directory has no parent")?
+            .to_path_buf())
+    } else {
+        Ok(directory)
+    }
 }
 
 /// Ensure a directory exists, creating it if necessary
