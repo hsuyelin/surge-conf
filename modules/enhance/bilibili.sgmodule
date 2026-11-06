@@ -1,6 +1,6 @@
 #########################################
 # bilibili
-# Last Updated: 2026-11-05 05:25:31
+# Last Updated: 2026-11-06 05:25:07
 # Upstream: https://raw.githubusercontent.com/kokoryh/Sparkle/refs/heads/master/release/surge/module/bilibili.sgmodule
 # GitHub: https://github.com/hsuyelin/surge-conf
 #########################################
@@ -34,7 +34,7 @@ AND,((DOMAIN-SUFFIX,chat.bilibili.com), (OR,((DOMAIN-KEYWORD,stun), (DOMAIN-KEYW
 ^https:\/\/grpc\.biliapi\.net\/bilibili\.app\.(?:view\.v1\.View\/TFInfo|viewunite\.v1\.View\/(?:PlayPause|ViewEndPage))$ header="content-type: application/grpc|grpc-status: 0" data-type=base64 data="AAAAAAA="
 
 [Body Rewrite]
-http-response-jq ^http:\/\/[^?]+\/resolve\?host= '.dns[]? |= (.ips = [] | .ttl = 86400)'
+http-response-jq ^http:\/\/[^?]+\/resolve\?host=(?:ap[ip]\.bilibili\.com|grpc\.biliapi\.net|api\.live\.bilibili\.com) '.dns[]? |= (.ips = [] | .ttl = 86400)'
 http-response-jq ^https:\/\/api\.live\.bilibili\.com\/xlive\/open-interface\/v2\/tracker\/conf\? '.data.domains = ["wss://tracker.chat.bilibili.com"]'
 http-response-jq ^https:\/\/api\.bilibili\.com\/x\/pd-proxy\/tracker\? '.data[][]? = "stun.chat.bilibili.com:3478"'
 http-response-jq ^https:\/\/api\.bilibili\.com\/pgc\/view\/v2\/app\/season\? 'del(.data.payment)'
