@@ -173,7 +173,7 @@ fn main() -> Result<()> {
     let mut updated_count = 0;
     let mut downloaded_icons: Vec<(String, String, IconCategory)> = Vec::new();
 
-    for name in ["claude_01", "claude_02"] {
+    for name in ["claude_01", "claude_02", "apple-intelligence"] {
         let path = icons_dir.join("apps").join(format!("{name}.png"));
         if !path.is_file() {
             anyhow::bail!("missing local icon: {}", path.display());

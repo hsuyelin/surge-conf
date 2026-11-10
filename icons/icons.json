@@ -12,6 +12,10 @@
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/claude_02.png"
     },
     {
+      "name": "apple-intelligence",
+      "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/apple-intelligence.png"
+    },
+    {
       "name": "chatgpt",
       "url": "https://raw.githubusercontent.com/hsuyelin/surge-conf/main/icons/apps/chatgpt.png"
     },

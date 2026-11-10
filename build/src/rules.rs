@@ -85,6 +85,8 @@ fn domain_rule(line: &str) -> Option<(&str, &str)> {
         return None;
     }
     match kind.trim() {
+        // Rule sets may carry an inline policy/options after the value; the matcher
+        // alone decides first-match coverage, so the trailing fields are ignored here.
         "DOMAIN" | "DOMAIN-SUFFIX" | "DOMAIN-KEYWORD" => Some((kind.trim(), value)),
         _ => None,
     }
@@ -138,9 +140,7 @@ impl Seen {
         if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("//") {
             return true;
         }
-        if let Some((kind, value)) =
-            domain_rule(trimmed).filter(|(_, _)| trimmed.split(',').count() == 2)
-        {
+        if let Some((kind, value)) = domain_rule(trimmed) {
             let value = value.to_ascii_lowercase();
             if self.keywords.iter().any(|word| value.contains(word)) {
                 return false;
@@ -345,6 +345,23 @@ mod tests {
         assert!(!output.contains("api.cursor.com"));
         assert!(!output.contains("www.example.com"));
         assert!(output.contains("DOMAIN-KEYWORD,ample"));
+    }
+
+    #[test]
+    fn inline_policy_rules_seed_coverage() {
+        let mut seen = Seen::default();
+        let output = normalize(
+            "DOMAIN-KEYWORD,adservice,reject\nDOMAIN-SUFFIX,ads.example,reject\n",
+            &mut seen,
+            None,
+        );
+        assert_eq!(output, "DOMAIN-KEYWORD,adservice,reject\nDOMAIN-SUFFIX,ads.example,reject\n");
+        let later = normalize(
+            "DOMAIN-SUFFIX,googleadservices.com\nDOMAIN,ads.example\nDOMAIN-SUFFIX,unrelated.example\n",
+            &mut seen,
+            None,
+        );
+        assert_eq!(later, "DOMAIN-SUFFIX,unrelated.example\n");
     }
 
     #[test]
