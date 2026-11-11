@@ -69,11 +69,13 @@ cd surge-conf
 
 规则同步会按 `surge.conf` 中 `[Rule]` 的顺序去重本地规则集；`DOMAIN-KEYWORD`、`DOMAIN-SUFFIX`、`DOMAIN` 及 IP 网段的包含关系也会处理。规则集中带内联策略的条目（如 `DOMAIN-SUFFIX,example.com,reject`）同样按匹配器参与覆盖判断，因为首条命中决定策略。较早的具体规则与较晚的宽泛规则会同时保留，以免改变其他域名的匹配结果。AI 自定义规则只放在 `rules/ai/ai.conf` 的 `BEGIN/END LOCAL AI RULES` 区间，刷新上游时会保留该区间；不再使用 `private-ai.conf`。仅执行本地去重（不下载）：`cd build && cargo run --bin sync_rules -- --normalize-only`。
 
-Apple Intelligence 的域名规则位于 `rules/ai/apple-intelligence.conf`，使用独立的 `Apple-AI` 策略组，并在通用 Apple 服务规则之前匹配。`apple.com`、`apple-dns.net` 等宽泛后缀仍用于其他域名，不应为了消除具体域名的覆盖关系而删除。
+Apple Intelligence 的域名规则位于 `rules/ai/apple-intelligence.conf`，使用独立的 `Apple-AI` 策略组。配置依次加载 `private-direct.conf`、Apple-AI、内置 SYSTEM，使定制直连和 Apple Intelligence 优先于系统默认规则。四条精确直连规则（`cloud.oracle.com`、`e0jd6o67-xlcsnh92.bliibili.top`、`l5okyats-2lruf01f.biliblili.uk`、`push.pilix.app`）保存在 `private-direct.conf`。`apple.com`、`apple-dns.net` 等宽泛后缀仍用于其他域名，不应为了消除具体域名的覆盖关系而删除。
 
 配置中刻意不设置 `tun-included-routes`：按 [Surge 手册](https://manual.nssurge.com/profile/general.html)，VIF 默认已是默认路由，该参数只用于额外声明更小的路由；在其中写入内网网段会导致系统问题。只要该键出现（包括出现在模块中），Surge 就会告警。
 
 地区和直连定制规则保存在 `rules/private/` 并通过 `surge.conf` 的 `RULE-SET` 引用；已存在的 Emby、AI、Streaming、DIRECT 策略优先，因此未用 `co.uk` 等宽泛规则覆盖现有服务。`wonderegg.de` 保持 Emby，未创建空 TW 规则集。GitHub Actions 的 `sync_rules` 在下载上游规则后执行同一套去重，再提交最终规则文件。
+
+不再使用 `biliblili.uk` 的宽泛 HK 后缀规则；其已有精确 DIRECT 和 Emby 规则保留。
 
 `modules/utility/appleCertBlock.sgmodule` 会拦截证书状态检查端点，并通过 `[MITM] hostname = %APPEND%` 添加主机名；启用后会削弱证书吊销状态检查，仅在了解风险时使用。
 

@@ -53,7 +53,6 @@ fn configured_overrides_keep_existing_policies() -> anyhow::Result<()> {
         ("push.pilix.app", "DIRECT"),
         ("meta.ai", "AI"),
         ("netflix.com", "Streaming"),
-        ("www.biliblili.uk", "HK"),
         ("typesafe.ai", "US"),
         ("209.33.172.62", "DIRECT"),
     ] {
@@ -64,5 +63,6 @@ fn configured_overrides_keep_existing_policies() -> anyhow::Result<()> {
             "{host}"
         );
     }
+    assert!(lookup(root, "www.biliblili.uk", false)?.matches.is_empty());
     Ok(())
 }

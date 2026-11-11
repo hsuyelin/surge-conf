@@ -69,11 +69,13 @@ Edit `surge.conf` and replace:
 
 Rule sync deduplicates local rule sets in `surge.conf` `[Rule]` order, including `DOMAIN-KEYWORD` / `DOMAIN-SUFFIX` / `DOMAIN` and IP network containment. Entries that embed an inline policy (such as `DOMAIN-SUFFIX,example.com,reject` in a rule set) take part in the same coverage check by matcher, since first match decides the policy. Earlier specific rules and later broad rules both remain when removing either would change routing. Keep custom AI entries only inside `BEGIN/END LOCAL AI RULES` in `rules/ai/ai.conf`; upstream refresh preserves that section. `private-ai.conf` is no longer used. To normalize local rules without downloading: `cd build && cargo run --bin sync_rules -- --normalize-only`.
 
-Apple Intelligence host rules live in `rules/ai/apple-intelligence.conf` and use the dedicated `Apple-AI` policy group, loaded before general Apple services. Broad `apple.com`, `apple-dns.net`, and proxy suffix rules remain for other hosts; do not remove them to resolve narrower matches.
+Apple Intelligence host rules live in `rules/ai/apple-intelligence.conf` and use the dedicated `Apple-AI` policy group. The profile loads `private-direct.conf` first, then Apple-AI, then the built-in SYSTEM set, so explicit direct overrides and Apple Intelligence take precedence over system defaults. The four exact direct overrides (`cloud.oracle.com`, `e0jd6o67-xlcsnh92.bliibili.top`, `l5okyats-2lruf01f.biliblili.uk`, and `push.pilix.app`) live in `private-direct.conf`. Broad `apple.com`, `apple-dns.net`, and proxy suffix rules remain for other hosts; do not remove them to resolve narrower matches.
 
 The profile deliberately sets no `tun-included-routes`: per the [Surge manual](https://manual.nssurge.com/profile/general.html), the VIF already declares the default route and the option is only needed to publish smaller routes; listing private ranges there causes system issues. Surge warns whenever the key appears, including inside modules.
 
 Regional and direct overrides live under `rules/private/` and are loaded with `RULE-SET` entries. Existing Emby, AI, Streaming, and DIRECT decisions take precedence; broad `co.uk` would shadow service rules and is omitted. `wonderegg.de` remains Emby, so no empty TW rule set is created. GitHub Actions runs `sync_rules` after checkout: it downloads upstream sets, normalizes the complete local set, then commits the resulting files.
+
+The broad HK suffix override for `biliblili.uk` has been removed; its existing exact DIRECT and Emby rules remain.
 
 `modules/utility/appleCertBlock.sgmodule` blocks certificate status-check endpoints and appends hosts with `[MITM] hostname = %APPEND%`. Enabling it weakens certificate revocation checks; use only when the risk is understood.
 
