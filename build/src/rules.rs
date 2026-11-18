@@ -355,7 +355,10 @@ mod tests {
             &mut seen,
             None,
         );
-        assert_eq!(output, "DOMAIN-KEYWORD,adservice,reject\nDOMAIN-SUFFIX,ads.example,reject\n");
+        assert_eq!(
+            output,
+            "DOMAIN-KEYWORD,adservice,reject\nDOMAIN-SUFFIX,ads.example,reject\n"
+        );
         let later = normalize(
             "DOMAIN-SUFFIX,googleadservices.com\nDOMAIN,ads.example\nDOMAIN-SUFFIX,unrelated.example\n",
             &mut seen,
