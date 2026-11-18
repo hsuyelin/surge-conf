@@ -77,6 +77,10 @@ Apple Intelligence 的域名规则位于 `rules/ai/apple-intelligence.conf`，�
 
 不再使用 `biliblili.uk` 的宽泛 HK 后缀规则；其已有精确 DIRECT 和 Emby 规则保留。
 
+Google 分流维护在 `rules/private/private-google.conf`：通过明确的 `DOMAIN-SUFFIX` 覆盖 `google.com`、`googleapis.com`、`gstatic.com`、`googleusercontent.com`、`google.co`，以及逐项列出的 `google.com.xx` / `google.co.xx` 地区域名及其子域名。不使用宽泛的 `google` 关键词或子串通配；其他包含 `google` 的域名保留原有通用 Proxy 规则（若有）。地区域名根据原有上游规则和 [Google 官方域名列表](https://www.google.com/supported_domains) 逐项列出。Google 规则集在 AI、广告拦截、Discord、YouTube 等专用服务之后、通用 Proxy 之前加载，专用服务仍优先；每次同步后的去重流程会移除 `global.conf` 中被覆盖的条目。
+
+`github.com`、`githubusercontent.com` 及其子域名统一由 `rules/private/private-us.conf` 中对应的 `DOMAIN-SUFFIX` 规则分流至 US，`global.conf` 不再保留相同后缀规则。该 US 规则也覆盖 `api.github.com`，替代其原有 AI 分流；后续同步会通过去重移除上游重新带入的条目。
+
 `modules/utility/appleCertBlock.sgmodule` 会拦截证书状态检查端点，并通过 `[MITM] hostname = %APPEND%` 添加主机名；启用后会削弱证书吊销状态检查，仅在了解风险时使用。
 
 ## 查询分流规则

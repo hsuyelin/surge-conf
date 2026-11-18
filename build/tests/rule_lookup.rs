@@ -63,6 +63,81 @@ fn configured_overrides_keep_existing_policies() -> anyhow::Result<()> {
             "{host}"
         );
     }
+    for host in [
+        "github.com",
+        "www.github.com",
+        "api.github.com",
+        "githubusercontent.com",
+        "raw.githubusercontent.com",
+        "avatars.githubusercontent.com",
+    ] {
+        let routing = lookup(root, host, false)?;
+        assert_eq!(routing.matches.len(), 1, "{host}: {:?}", routing.matches);
+        assert_eq!(routing.matches[0].file, "rules/private/private-us.conf");
+        assert_eq!(routing.matches[0].policy, "US");
+    }
     assert!(lookup(root, "www.biliblili.uk", false)?.matches.is_empty());
+    Ok(())
+}
+
+#[test]
+fn google_routes_respect_domain_boundaries() -> anyhow::Result<()> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("build has no parent"))?;
+    for host in [
+        "google.com",
+        "www.google.com",
+        "googleapis.com",
+        "maps.googleapis.com",
+        "gstatic.com",
+        "fonts.gstatic.com",
+        "googleusercontent.com",
+        "lh3.googleusercontent.com",
+        "google.com.tw",
+        "www.google.com.tw",
+        "google.com.au",
+        "google.co",
+        "www.google.co",
+        "google.co.uk",
+        "www.google.co.uk",
+        "google.co.jp",
+    ] {
+        let routing = lookup(root, host, false)?;
+        assert_eq!(routing.matches.len(), 1, "{host}: {:?}", routing.matches);
+        assert_eq!(routing.matches[0].file, "rules/private/private-google.conf");
+        assert_eq!(routing.matches[0].policy, "Google");
+    }
+    for host in [
+        "notgoogle.com",
+        "notgoogleapis.com",
+        "notgstatic.com",
+        "notgoogleusercontent.com",
+        "google.com.evil.test",
+        "google.co.uk.evil.test",
+    ] {
+        let routing = lookup(root, host, false)?;
+        assert!(
+            routing.matches.iter().all(|entry| entry.policy != "Google"),
+            "{host}: {:?}",
+            routing.matches
+        );
+    }
+    for (host, expected) in [
+        ("9to5google.com", "Proxy"),
+        ("googlemail.com", "Proxy"),
+        ("google.de", "Proxy"),
+        ("gemini.google.com", "AI"),
+        ("generativelanguage.googleapis.com", "AI"),
+        ("googlevideo.com", "YouTube"),
+        ("youtubei.googleapis.com", "YouTube"),
+    ] {
+        let routing = lookup(root, host, false)?;
+        assert_eq!(
+            routing.matches.first().map(|entry| entry.policy.as_str()),
+            Some(expected),
+            "{host}"
+        );
+    }
     Ok(())
 }

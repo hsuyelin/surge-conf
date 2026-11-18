@@ -77,6 +77,10 @@ Regional and direct overrides live under `rules/private/` and are loaded with `R
 
 The broad HK suffix override for `biliblili.uk` has been removed; its existing exact DIRECT and Emby rules remain.
 
+Google routing lives in `rules/private/private-google.conf`: explicit `DOMAIN-SUFFIX` rules cover `google.com`, `googleapis.com`, `gstatic.com`, `googleusercontent.com`, `google.co`, and the enumerated `google.com.xx` / `google.co.xx` regional domains and their subdomains. No broad `google` keyword or substring wildcard is used; unrelated domains containing `google` keep their generic Proxy rules where present. Regional suffixes are listed individually, based on existing upstream rules and [Google's supported domains](https://www.google.com/supported_domains). The Google set loads after dedicated service rules (including AI, ad blocking, Discord and YouTube) but before generic Proxy rules; those service-specific routes retain precedence. Normalization removes covered upstream copies from `global.conf` after each sync.
+
+`github.com`, `githubusercontent.com` and their subdomains use dedicated `DOMAIN-SUFFIX` rules in `rules/private/private-us.conf` (US), with no duplicate suffixes in `global.conf`. This US override also covers `api.github.com`, replacing its former AI route; normalization removes upstream copies after each sync.
+
 `modules/utility/appleCertBlock.sgmodule` blocks certificate status-check endpoints and appends hosts with `[MITM] hostname = %APPEND%`. Enabling it weakens certificate revocation checks; use only when the risk is understood.
 
 ## Inspect local routing rules
