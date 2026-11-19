@@ -69,6 +69,8 @@ cd surge-conf
 
 规则同步会按 `surge.conf` 中 `[Rule]` 的顺序去重本地规则集；`DOMAIN-KEYWORD`、`DOMAIN-SUFFIX`、`DOMAIN` 及 IP 网段的包含关系也会处理。规则集中带内联策略的条目（如 `DOMAIN-SUFFIX,example.com,reject`）同样按匹配器参与覆盖判断，因为首条命中决定策略。较早的具体规则与较晚的宽泛规则会同时保留，以免改变其他域名的匹配结果。AI 自定义规则只放在 `rules/ai/ai.conf` 的 `BEGIN/END LOCAL AI RULES` 区间，刷新上游时会保留该区间；不再使用 `private-ai.conf`。仅执行本地去重（不下载）：`cd build && cargo run --bin sync_rules -- --normalize-only`。
 
+Anthropic 的 IP 兜底规则位于 `rules/ai/ai.conf`：`IP-CIDR,160.79.104.0/21,no-resolve`、`IP-CIDR6,2607:6bc0::/32,no-resolve` 和 `IP-ASN,399358,no-resolve`，均使用 AI 策略。IP 规则放在本地 AI 区块末尾；同步时将整个区块追加到上游域名规则之后。按 [Surge IP 规则手册](https://manual.nssurge.com/rules/ip.html)，`no-resolve` 会跳过尚未解析的域名请求，不会为匹配主动触发 DNS；目标为 IP 或已有解析结果时仍可匹配。ASN 匹配使用 Surge 随应用更新的内置 ASN 数据库；不支持 ASN 的客户端可仅使用两条 CIDR 规则。
+
 Apple Intelligence 的域名规则位于 `rules/ai/apple-intelligence.conf`，使用独立的 `Apple-AI` 策略组。配置依次加载 `private-direct.conf`、Apple-AI、内置 SYSTEM，使定制直连和 Apple Intelligence 优先于系统默认规则。三条精确直连规则（`cloud.oracle.com`、`e0jd6o67-xlcsnh92.bliibili.top`、`push.pilix.app`）保存在 `private-direct.conf`；`l5okyats-2lruf01f.biliblili.uk` 通过 `private-emby.conf` 使用 Emby 策略。`apple.com`、`apple-dns.net` 等宽泛后缀仍用于其他域名，不应为了消除具体域名的覆盖关系而删除。
 
 配置中刻意不设置 `tun-included-routes`：按 [Surge 手册](https://manual.nssurge.com/profile/general.html)，VIF 默认已是默认路由，该参数只用于额外声明更小的路由；在其中写入内网网段会导致系统问题。只要该键出现（包括出现在模块中），Surge 就会告警。

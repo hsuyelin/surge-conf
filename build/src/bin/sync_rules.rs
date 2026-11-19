@@ -219,7 +219,7 @@ fn sync_rule(source: &RuleSource, rules_dir: &Path) -> Result<bool> {
         let existing = fs::read_to_string(&file_path)?;
         let local = ai_additions(&existing)
             .ok_or_else(|| anyhow::anyhow!("ai.conf missing local AI rules markers"))?;
-        format!("# BEGIN LOCAL AI RULES\n{local}# END LOCAL AI RULES\n{rule_content}")
+        format!("{rule_content}\n# BEGIN LOCAL AI RULES\n{local}# END LOCAL AI RULES\n")
     } else {
         rule_content
     };
